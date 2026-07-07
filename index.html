@@ -203,11 +203,23 @@
   .wa-textarea{width:100%;min-height:260px;background:var(--navy);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;}
 
   @media print{
-    body *{visibility:hidden;}
-    .modal-card, .modal-card *{visibility:visible;}
-    .modal-overlay{position:absolute;background:none;padding:0;}
-    .modal-actions{display:none;}
-    .modal-head{display:none;}
+    header, main, #waModal { display:none !important; }
+    .modal-overlay#cotizacionModal{
+      display:block !important;
+      position:static !important;
+      background:none !important;
+      padding:0 !important;
+      overflow:visible !important;
+      inset:auto !important;
+    }
+    .modal-card{
+      max-width:100% !important;
+      margin:0 !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+    }
+    .modal-head, .modal-actions{ display:none !important; }
+    .modal-body{ padding:0 !important; }
   }
 </style>
 </head>
