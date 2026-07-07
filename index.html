@@ -203,6 +203,7 @@
   .wa-textarea{width:100%;min-height:260px;background:var(--navy);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;}
 
   @media print{
+    body{ background:#fff !important; }
     header, main, #waModal { display:none !important; }
     .modal-overlay#cotizacionModal{
       display:block !important;
@@ -222,6 +223,8 @@
     .modal-body{ padding:0 !important; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -335,7 +338,7 @@
     <div class="modal-body" id="cotizacionBody"></div>
     <div class="modal-actions">
       <button class="close-btn" onclick="closeModal('cotizacionModal')">Cerrar</button>
-      <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button class="print-btn" id="pdfBtn" onclick="downloadPdf()">⬇️ Descargar PDF</button>
     </div>
   </div>
 </div>
@@ -652,6 +655,47 @@ function openCotizacion(){
 }
 
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+async function downloadPdf(){
+  const btn = document.getElementById('pdfBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Generando…';
+  btn.disabled = true;
+  try{
+    const target = document.querySelector('#cotizacionModal .modal-body');
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'pt', 'letter');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = canvas.height * (imgWidth / canvas.width);
+
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const folioSafe = document.getElementById('folioTitle').textContent.replace(/[^a-zA-Z0-9-]+/g, '_');
+    pdf.save(`${folioSafe}.pdf`);
+  } catch(err){
+    alert('No se pudo generar el PDF. Revisa tu conexión a internet e intenta de nuevo.');
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
 
 buildChips();
 render();
